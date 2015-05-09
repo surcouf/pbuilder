@@ -58,19 +58,15 @@ esac
 : ${ARCH:="$(dpkg --print-architecture)"}
 
 NAME="${DIST}"
-if [ -n "${ARCH}" ]; then
+if [[ -n "${ARCH}" ]]; then
     NAME="${NAME}-${ARCH}"
     DEBOOTSTRAPOPTS=("--arch" "${ARCH}" "${DEBOOTSTRAPOPTS[@]}")
 fi
-BASETGZ="/home/pbuilder/${NAME}-base.tgz"
-DISTRIBUTION="${DIST}"
-BUILDRESULT="/home/pbuilder/${NAME}/result/"
-APTCACHE="/home/pbuilder/${NAME}/aptcache/"
-BUILDPLACE="/home/pbuilder/${NAME}/build/"
 
 case "${DIST}" in
     ${UNSTABLE_CODENAME}|${TESTING_CODENAME}|${STABLE_CODENAME}|unstable|testing|stable)
         # Debian configuration
+        VENDOR="debian"
         MIRRORSITE="http://${DEBIAN_MIRROR}/debian/"
         COMPONENTS="main contrib non-free"
         if $(echo "${STABLE_CODENAME} stable" | grep -q $DIST); then
@@ -79,6 +75,7 @@ case "${DIST}" in
     ;;
     utopic|trusty|saucy|raring|quantal|precise|oneiric|natty|lucid|hardy)
         # Ubuntu configuration
+        VENDOR="ubuntu"
         MIRRORSITE="http://${UBUNTU_MIRROR}/ubuntu/"
         COMPONENTS="main restricted universe multiverse"
     ;;
@@ -87,6 +84,16 @@ case "${DIST}" in
         exit 1
     ;;
 esac
+
+BASETGZ="/home/pbuilder/${VENDOR}/${NAME}/base.tgz"
+DISTRIBUTION="${DIST}"
+BUILDRESULT="/home/pbuilder/${VENDOR}/${NAME}/result/"
+APTCACHE="/home/pbuilder/${VENDOR}/${NAME}/aptcache/"
+BUILDPLACE="/home/pbuilder/${VENDOR}/${NAME}/build/"
+
+for dir in ${BUILDRESULT} ${APTCACHE} ${BUILDPLACE}; do
+    mkdir -p ${dir}
+done
 
 #EXTRAPACKAGES=""
 #export DEBIAN_BUILDARCH=athlon
