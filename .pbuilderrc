@@ -26,11 +26,13 @@ DEBOOTSTRAPOPTS=(
 
 # Optionally use the changelog of a package to determine the suite to use if
 # none set.
-if [ -z "${DIST}" ] && [ -r "debian/changelog" ]; then
-    DIST=$(dpkg-parsechangelog | awk '/^Distribution: / {print $2}')
-    # Use the unstable suite for Debian experimental packages.
-    if [ "${DIST}" == "experimental" ]; then
-        DIST="unstable"
+if [[ -z "${DIST}" ]]; then
+    if [[ -r "debian/changelog" ]]; then
+       DIST=$(dpkg-parsechangelog | awk '/^Distribution: / {print $2}')
+       # Use the unstable suite for Debian experimental packages.
+       if [[ "${DIST}" == "experimental" ]]; then
+           DIST="unstable"
+       fi
     fi
 fi
 
@@ -55,33 +57,33 @@ esac
 # that you can set your own default (i.e. ${ARCH:="i386"}).
 : ${ARCH:="$(dpkg --print-architecture)"}
 
-NAME="$DIST"
+NAME="${DIST}"
 if [ -n "${ARCH}" ]; then
-    NAME="$NAME-$ARCH"
-    DEBOOTSTRAPOPTS=("--arch" "$ARCH" "${DEBOOTSTRAPOPTS[@]}")
+    NAME="${NAME}-${ARCH}"
+    DEBOOTSTRAPOPTS=("--arch" "${ARCH}" "${DEBOOTSTRAPOPTS[@]}")
 fi
-BASETGZ="/var/cache/pbuilder/${NAME}-base.tgz"
+BASETGZ="/home/pbuilder/${NAME}-base.tgz"
 DISTRIBUTION="${DIST}"
-BUILDRESULT="/var/cache/pbuilder/${NAME}/result/"
-APTCACHE="/var/cache/pbuilder/$NAME/aptcache/"
-BUILDPLACE="/var/cache/pbuilder/build/"
+BUILDRESULT="/home/pbuilder/${NAME}/result/"
+APTCACHE="/home/pbuilder/${NAME}/aptcache/"
+BUILDPLACE="/home/pbuilder/${NAME}/build/"
 
 case "${DIST}" in
     ${UNSTABLE_CODENAME}|${TESTING_CODENAME}|${STABLE_CODENAME}|unstable|testing|stable)
         # Debian configuration
-        MIRRORSITE="http://$DEBIAN_MIRROR/debian/"
+        MIRRORSITE="http://${DEBIAN_MIRROR}/debian/"
         COMPONENTS="main contrib non-free"
-        if $(echo "$STABLE_CODENAME stable" | grep -q $DIST); then
-            OTHERMIRROR="$OTHERMIRROR | deb $MIRRORSITE $STABLE_BACKPORTS_SUITE $COMPONENTS"
+        if $(echo "${STABLE_CODENAME} stable" | grep -q $DIST); then
+            OTHERMIRROR="${OTHERMIRROR} | deb ${MIRRORSITE} ${STABLE_BACKPORTS_SUITE} ${COMPONENTS}"
         fi
     ;;
     utopic|trusty|saucy|raring|quantal|precise|oneiric|natty|lucid|hardy)
         # Ubuntu configuration
-        MIRRORSITE="http://$UBUNTU_MIRROR/ubuntu/"
+        MIRRORSITE="http://${UBUNTU_MIRROR}/ubuntu/"
         COMPONENTS="main restricted universe multiverse"
     ;;
     *)
-        echo "Unknown distribution: $DIST"
+        echo "Unknown distribution: ${DIST}"
         exit 1
     ;;
 esac
